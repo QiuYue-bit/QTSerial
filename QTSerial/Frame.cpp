@@ -4,85 +4,83 @@ ConfigData configData;//定义全局的一个配置数据
 //全局变量
 QVector<Frame> vframe;
 quint64 sysStartTimeMs;
-bool frameOK;
+
 quint64 frameLossCount = 0;
 quint64 frameCount = 0;
 
-static quint8 DataBuffer[32];
+//static quint8 DataBuffer[32];
+//int dataReceivePrepare(quint8 data)
+//{
+//    static quint8 state = 0;
+//    quint8 sumCheck=0;
+//    bool dataOk = 0;
+//    if(state == 0 && data == 0x55)
+//    {
+//        DataBuffer[state] = data;
+//        state++;
+//    }
+//    else if (state==1 && data == 0xa4)
+//    {
+//        DataBuffer[state] = data;
+//        state++;
+//    }
+//    else if (state==2 && data == 0x1c)
+//    {
+//        DataBuffer[state] = data;
+//        state++;
+//    }
+//    // 数据state = 30的时候存的是温度
+//    else if(state < 31)
+//    {
+//        DataBuffer[state] = data;
+//        state++;
+//    }
+//    // 和校验位
+//    else if(state == 31)
+//    {
+//        for(quint8 i=2;i<=30;i++)
+//            sumCheck+=DataBuffer[i];
+//        DataBuffer[state] = data;
+//        state++;
+//    }
+//    //备用字节
+//    else if(state == 32 && data==0x00)
+//    {
+//        DataBuffer[state] = 0x00;
+//        //如果最后一个字节也是对的，那就保存数据并解析
+//        if(sumCheck == DataBuffer[state-1])
+//        {
+//            dataOk=1;
+//            Frame frametemp;
+
+//            //原始数据赋值
+//            for(int i =0;i<33;i++)
+//                frametemp.originBuffer[i]=DataBuffer[i];
+
+//            //对帧数据进行处理
+//            dataReceiveAnl(frametemp);
+//            //记录该帧
+//            vframe.push_back(frametemp);
+//            return 1;
+//        }
+//        else
+//        {
+//            return 0;
+//            dataOk=0;
+//        }
+//        //一帧
+//        state=0;
+//    }
+//    else
+//    {
+//        state=0;
+//        return 0;
+//    }
 
 
-int dataReceivePrepare(quint8 data)
-{
-    static quint8 state = 0;
-    quint8 sumCheck=0;
-    bool dataOk = 0;
-    if(state == 0 && data == 0x55)
-    {
-        DataBuffer[state] = data;
-        state++;
-    }
-    else if (state==1 && data == 0xa4)
-    {
-        DataBuffer[state] = data;
-        state++;
-    }
-    else if (state==2 && data == 0x1c)
-    {
-        DataBuffer[state] = data;
-        state++;
-    }
-    // 数据state = 30的时候存的是温度
-    else if(state < 31)
-    {
-        DataBuffer[state] = data;
-        state++;
-    }
-    // 和校验位
-    else if(state == 31)
-    {
-        for(quint8 i=2;i<=30;i++)
-            sumCheck+=DataBuffer[i];
-        DataBuffer[state] = data;
-        state++;
-    }
-    //备用字节
-    else if(state == 32 && data==0x00)
-    {
-        DataBuffer[state] = 0x00;
-        //如果最后一个字节也是对的，那就保存数据并解析
-        if(sumCheck == DataBuffer[state-1])
-        {
-            dataOk=1;
-            Frame frametemp;
+//    return 0;
 
-            //原始数据赋值
-            for(int i =0;i<33;i++)
-                frametemp.originBuffer[i]=DataBuffer[i];
-
-            //对帧数据进行处理
-            dataReceiveAnl(frametemp);
-            //记录该帧
-            vframe.push_back(frametemp);
-            return 1;
-        }
-        else
-        {
-            return 0;
-            dataOk=0;
-        }
-        //一帧
-        state=0;
-    }
-    else
-    {
-        state=0;
-        return 0;
-    }
-
-
-    return 0;
-
-}
+//}
 
 
 void dataReceiveAnl(Frame &frameTemp)
@@ -195,7 +193,6 @@ void dataReceiveAnl(Frame &frameTemp)
      *  原始数据格式 系统时间ms buff
      */
 
-
     //原始数据
     frameTemp.originData =QString("");
     QString str("");
@@ -207,23 +204,18 @@ void dataReceiveAnl(Frame &frameTemp)
     //解析后的数据
     frameTemp.formData = QString("");
     frameTemp.formData += \
-            frameTemp.currentTime + QString(' ')\
-            +  QString::number(frameTemp.sysTimeMs) +QString(' ') \
-            +  QString::number(frameTemp.frameTimeMs) +QString(' ')\
-//            + QString::number(frameTemp.frameTimeMs) +QString(' ')
-            + QString::number(frameTemp.FrameID) +QString(' ') \
-            + QString::number(frameTemp.Groy[X],'f',6) +QString(' ') \
-            + QString::number(frameTemp.Groy[Y],'f',6) +QString(' ') \
-            + QString::number(frameTemp.Groy[Z],'f',6) +QString(' ') \
+            QString::number(frameTemp.FrameID) +QString(' ') \
+            +frameTemp.currentTime + QString(' ')\
+            + QString::number(frameTemp.sysTimeMs) +QString(' ') \
+            + QString::number(frameTemp.frameTimeMs) +QString(' ')\
             + QString::number(frameTemp.Acc[X],'f',6) +QString(' ') \
             + QString::number(frameTemp.Acc[Y],'f',6) +QString(' ') \
             + QString::number(frameTemp.Acc[Z],'f',6) +QString(' ') \
+            + QString::number(frameTemp.Groy[X],'f',6) +QString(' ') \
+            + QString::number(frameTemp.Groy[Y],'f',6) +QString(' ') \
+            + QString::number(frameTemp.Groy[Z],'f',6) +QString(' ') \
             + QString::number(frameTemp.temperature,'f',6)\
             ;
-
-        qint64 differ=frameTemp.sysTimeMs*10 - frameTemp.frameTimeMs;
-
-        qDebug()<<"frameLossCount:"<<frameLossCount<<"differ"<<differ;
 }
 
 QString getCurrentTime()
@@ -232,23 +224,16 @@ QString getCurrentTime()
     return dateTime.toString("HH:mm:ss.zzz");
 
 }
-/*******************获得当前时间************************************/
-QString getCurrentTimeMs()
-{
-    QString timestamp;
-    QDateTime dateTime = QDateTime::currentDateTime();
-    timestamp = dateTime.toString("HH:mm:ss.zzz -> ");
-    return timestamp;
-}
 
 /*******************获得时间戳 （毫秒）************************************/
-qint64 getTimeStamp()
+quint64 getTimeStamp()
 {
     QDate dt;
     QDateTime dateTime = QDateTime::currentDateTime();
     QDateTime today;
     today.setDate(dt.currentDate());
-    return dateTime.toMSecsSinceEpoch() - today.toMSecsSinceEpoch();
+    quint64 ms =dateTime.toMSecsSinceEpoch() - today.toMSecsSinceEpoch();
+    return (ms);
 }
 
 /*******************基于IMU时间戳的时间 （毫秒）************************************/
@@ -256,36 +241,4 @@ quint64 getFrameTimeStamp()
 {
     //400HZ
     return sysStartTimeMs*10+frameCount*25;
-}
-/*******************保存数据************************************/
-void SaveFrameData()
-{
-//    qDebug()<<"on_ckbSave2File_clicked";
-
-//    QDateTime now = QDateTime::currentDateTime();//当前时间
-//    QString def = now.toString("yyyy-MM-dd.hh.mm") + ".txt";
-//    QString fileName = QFileDialog::getSaveFileName(this,tr("Please input a file name"),def,tr("text(*.txt)"));//save函数类似另存为，可输入新的文件名
-
-//    //参数说明：this代表此对话框作为父窗口，第二个参数是对话框的标题，第三个参数代表默认显示的文件名和路径（只写路径时无文件名），第四个参数是过滤器，其中的*代表任意匹配不能漏了
-//    if(fileName.isEmpty())//判断是否为空
-//    {
-//        qDebug()<<tr("FileName is Null, Do Nothing!");//调试框内输出
-//        return;//不进行任何改变
-//    }
-
-//    QFile recordFile;//Qt的文件对象
-//    QTextStream textStream;//Qt文本文件流
-//    recordFile.setFileName(fileName);//设定文件名
-//    qDebug()<<tr("save File Name：")<<fileName;//调试文件名
-
-//    if (recordFile.open(QIODevice::Text|QFile::WriteOnly|QFile::Truncate))//Append//以只写、附加方式打开Text文件
-//    {
-//        textStream.setDevice(&recordFile);//设定文本流对象
-//        //textStream.setCodec(QTextCodec::codecForName("GB18030"));//读取txt文件时，使用此语句，可避免出现中文乱码。
-//        //写文件时，使用QString::fromUtf8()将中文包起来可避免乱码
-//        QString content = ui->plainTextEdit->toPlainText();
-//        textStream<<content<<endl;
-//        textStream.flush();//写入硬盘
-//    }
-//    recordFile.close();//关闭文件//可多次关闭
 }

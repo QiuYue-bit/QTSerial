@@ -170,6 +170,8 @@ void MainWindow::on_ckbSave2File_clicked()
         textStream.setDevice(&recordFile);//设定文本流对象
         //textStream.setCodec(QTextCodec::codecForName("GB18030"));//读取txt文件时，使用此语句，可避免出现中文乱码。
         //写文件时，使用QString::fromUtf8()将中文包起来可避免乱码
+        QString form = QString::fromUtf8("frameID 系统时间hh:mm:ss 系统时间(1e-4s) 数据时间戳时间(1e-4s) acc_x(g) acc_y(g) acc_z(g) gry_x(deg/s) gry_y(deg/s) gry_z(deg/s) temprature(degC)");
+        textStream<<form<<"\r\n";
         for(auto frame:vframe)
         {
             QString content = frame.formData;
@@ -310,7 +312,7 @@ void MainWindow::parseMsg(QByteArray recvData)
 
     //赋值时间
     frametemp.originBuffer = recvData;
-    frametemp.sysTimeMs =getTimeStamp();
+    frametemp.sysTimeMs =getTimeStamp()*10;
     frametemp.currentTime = getCurrentTime();
     frametemp.frameTimeMs = getFrameTimeStamp();
 
@@ -318,59 +320,22 @@ void MainWindow::parseMsg(QByteArray recvData)
     dataReceiveAnl(frametemp);
 
     //在ui中打印数据信息
-    if(frametemp.FrameID %100 ==0)
+    if(frametemp.FrameID %1000 ==0)
     {
         QString recvStr(frametemp.formData);
         ui->plainTextEdit->moveCursor(QTextCursor::End);//将光标移动到末尾
         recvStr+='\n';
         ui->plainTextEdit->insertPlainText(recvStr);//使用append会导致换行
+
+        //输出Frame信息
+        qint64 differ=frametemp.sysTimeMs - frametemp.frameTimeMs;
+        qDebug()<<"frameLossCount:"<<frameLossCount<<"differ"<<differ;
+
     }
 
 
     //将当前帧保存到Vector中
     vframe.push_back(frametemp);
-
-//    QString recvStr(recvData);//将接收到的ByteArray转换成字符串，以便输出
-//    QString recvInfo;
-
-//    if(ui->ckbShowTime->isChecked())//是否选中了“显示时间”选项
-//    {
-//        QTime now = QTime::currentTime();//获取当前时间
-//        recvInfo = "["+now.toString("hh:mm:ss")+"]";//转换成长度为10的字符串
-//    }else
-//    {
-//        recvInfo="";
-//    }
-
-//    if(ui->ckbHexDisplay->isChecked())//是否选中了“十六进制显示”选项
-//    {
-//        recvInfo += recvData.toHex(' ');//转换成十六进制字符串
-//        recvInfo += QString(' ');//后面追加一个空格
-//    }else
-//    {
-//        recvInfo.append(recvData);//未选中时，直接输出字符
-//    }
-
-//    if(ui->ckbShowTime->isChecked())//如果选中了“显示时间”选项，则需要追加一个换行
-//    {
-//        recvInfo+='\n';
-//    }
-
-//    ui->plainTextEdit->moveCursor(QTextCursor::End);//将光标移动到末尾
-//    //不使用换行
-//    ui->plainTextEdit->insertPlainText(recvInfo);//使用append会导致换行
-
-
-    /* 默认换行 */
-//    if(ui->ckbAutoLine->isChecked())//是否选中了“自动换行”选项
-//    {
-//        ui->plainTextEdit->append(recvInfo);//使用append会导致换行
-//    }else
-//    {
-//        ui->plainTextEdit->insertPlainText(recvInfo);//使用插入文本不会导致换行
-//    }
-
-
 }
 
 
